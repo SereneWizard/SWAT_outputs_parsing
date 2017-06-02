@@ -1,0 +1,176 @@
+ rchFileID = fopen('output.rch');
+for i = 1:10
+    currRchLine = fgetl(rchFileID);
+end
+ %rchColFormat =  '%s %f %f %f %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s';
+
+%while ischar(thisline)
+%     for i=1:10
+%     disp(thisline)
+%     tline = fgetl(outputrchfile);
+%     data=strread(thisline, '%s')
+%     end
+ currRchLineText= strsplit(currRchLine, ' ');
+year = str2double(currRchLineText{4});
+currRchNum = str2double(currRchLineText{2});
+while (year <= numYears) 
+ 
+ 
+ %while ~feof(outputrchfile)
+ 
+     cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).SUB = str2double(currRchLineText{2});
+                   
+            cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).year = str2double(currRchLineText{4});
+                   cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).month = 1;
+                   cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).day = 1;
+                   cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).flow = str2double(currRchLineText{6});
+                   cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).nitrate = str2double(currRchLineText{48});
+                   cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).phosphorus = str2double(currRchLineText{49});
+                   thisline = fgetl(rchFileID);
+currRchLineText = strsplit(thisline, ' ');
+year = str2double(currRchLineText{4});
+ end 
+
+            tic;
+%             while yearRchIndex <= numYears
+%                %Cell array of parsed elements from one line, save reach, date, flow,
+%                %nitrate and phosphorus
+%                for currRchLineNum = 1:1:numRCHs
+% 
+%                    %this is the year to store
+%                    currRchLineText = textscan(currRchLine, rchColFormat);
+%                    disp(currRchLineText)
+%                    currRchNum = currRchLineText{2};
+
+                   %Store in SWATHistory for govtObject
+%                    cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).SUB = currRchLineText{2};
+%                    cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).year = currRchYear;
+%                    cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).month = 1;
+%                    cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).day = 1;
+%                    cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).flow = str2double(currRchLineText{6});
+%                    cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).nitrate = str2double(currRchLineText{48});
+%                    cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).phosphorus = str2double(currRchLineText{49});
+
+
+                       
+
+%                    currRchLine = fgetl(rchFileID);       
+%                end
+
+               yearRchIndex = yearRchIndex + 1;
+               currRchYear = currRchYear + 1;
+
+            %end
+   
+           % fprintf('Reach Processing Time:')
+            runtimeRchProcessing = toc;
+
+            fclose(rchFileID)
+
+            %matrix of reach numbers to pull data
+            reach = outletReach;
+            %yearly matrix size
+
+
+            % fopen returns an id
+            hruFileID = fopen('output.hru');
+            hruHeaderSize = 8;
+            for headerLineIndex = 1:hruHeaderSize
+                currHruLine = fgetl(hruFileID);
+            end
+
+            % Column names
+            hruColNames = fgetl(hruFileID);
+            currHruLine = fgetl(hruFileID);
+
+            hruColFormat =  '%s %s %f %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s';
+            yearHruIndex = 1;
+            currHruYear = startYear;
+
+            tic;
+            while yearHruIndex <= numYears
+               %Cell array of parsed elements from one line, save reach, date, flow,
+               %nitrate and phosphorus
+               for currHruLineNum = 1:1:numHRUs
+               
+                   %HRU number in output.hru is 2 column (1st column is key)
+                   currHruLineText = textscan(currHruLine, hruColFormat);
+                   currHruNumCell = currHruLineText{2};
+                   currHruNum = str2num(currHruNumCell{1});
+                   %select which reach to pull
+
+                   %Store in SWATHistory for govtObject
+                   %LU_cell = currHruLineText{1};
+                   %LU = LU_cell{1};
+                   
+                   curOwnerObj = cGov.ownerList(currHruNum);
+                   
+                   LU = currHruLineText{1};
+                       
+                   cGov.SWATBaseHRUHistory{yearHruIndex,1}(currHruNum).LU = currHruLineText{1};
+                   %Calculate yield in BU_acres
+                   yieldTN_ha = str2double(currHruLineText{72}); %Yield ton/ha
+                   cGov.SWATBaseHRUHistory{yearHruIndex,1}(currHruNum).yield = yieldTN_ha; %Yield ton/ha
+                   if strcmp(LU,'CORN')
+                       yieldBU_ac = ((2205/2.471)/(56))*yieldTN_ha;
+                       % Convrestion factors (JT---Bridget noted) 
+                       curOwnerObj.setOwnerYearCrop('CORN',yearHruIndex);
+                   elseif strcmp(LU,'SOYB')
+                       yieldBU_ac = ((2205/2.471)/(60))*yieldTN_ha;
+                       curOwnerObj.setOwnerYearCrop('SOYB',yearHruIndex);
+                   else
+                       %Non AGRR yield
+                       curOwnerObj.setOwnerYearCrop('NAGR',yearHruIndex);
+                       yieldBU_ac = 0;
+                   end 
+
+                   curOwnerObj.updateCropYields(yearHruIndex, LU, yieldBU_ac);
+
+                   cGov.SWATBaseHRUHistory{yearHruIndex,1}(currHruNum).HRU = currHruNum;
+                   cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).year = startYear - 1 + yearHruIndex;
+                   cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).month = 1;
+                   cGov.SWATBaseSUBHistory{yearRchIndex,1}(currRchNum).day = 1;
+                   cGov.SWATBaseHRUHistory{yearHruIndex,1}(currHruNum).yield = str2double(currHruLineText{72}); %Yield ton/ha
+                   cGov.SWATBaseHRUHistory{yearHruIndex,1}(currHruNum).yieldBU_ac = yieldBU_ac; %Yield ton/ha
+                   cGov.SWATBaseHRUHistory{yearHruIndex,1}(currHruNum).yieldBiomass = str2double(currHruLineText{70}); %Yield Biomass
+                   cGov.SWATBaseHRUHistory{yearHruIndex,1}(currHruNum).tileQ = str2double(currHruLineText{80}); %tileQ
+                   cGov.SWATBaseHRUHistory{yearHruIndex,1}(currHruNum).tileNO3 = str2double(currHruLineText{81}); %tileQ
+                   cGov.SWATBaseHRUHistory{yearHruIndex,1}(currHruNum).lateralQ = str2double(currHruLineText{25}); %lateralQ
+                   cGov.SWATBaseHRUHistory{yearHruIndex,1}(currHruNum).surfaceQ = str2double(currHruLineText{23}); %surfaceQ
+                   cGov.SWATBaseHRUHistory{yearHruIndex,1}(currHruNum).nitrogenOut = str2double(currHruLineText{59}) + str2double(currHruLineText{60}); %NSURQ + NLATQ
+
+
+                   curHRUObj = cGov.HRUList(currHruNum);
+                   %Store in each HRUAgent
+                   curHRUObj.LU_history{yearHruIndex} = currHruLineText{1};
+                   curHRUObj.yield(yearHruIndex) = str2double(currHruLineText{72});
+                   %Convert tons/ha to bushels per acre
+                   curHRUObj.yieldBU_ac(yearHruIndex) = yieldBU_ac;
+                   curHRUObj.biomassYield(yearHruIndex) = str2double(currHruLineText{70});
+                   curHRUObj.tileQ(yearHruIndex) = str2double(currHruLineText{80});
+                   curHRUObj.tileNO3(yearHruIndex) = str2double(currHruLineText{81});                   
+                   curHRUObj.lateralQ(yearHruIndex) = str2double(currHruLineText{25});
+                   curHRUObj.surfaceQ(yearHruIndex) = str2double(currHruLineText{23});
+                   curHRUObj.nitrogenOut(yearHruIndex) = str2double(currHruLineText{59}) + str2double(currHruLineText{60});
+                   
+                   %Nitrate and phosphorus is collected at reach
+                   curHRUObj.flow(yearHruIndex) = cGov.SWATBaseSUBHistory{yearHruIndex,1}(curHRUObj.SUBIndex).flow;
+                   curHRUObj.nitrate(yearHruIndex) = cGov.SWATBaseSUBHistory{yearHruIndex,1}(curHRUObj.SUBIndex).nitrate;
+                   curHRUObj.phosphorus(yearHruIndex) = cGov.SWATBaseSUBHistory{yearHruIndex,1}(curHRUObj.SUBIndex).phosphorus;
+
+                   currHruLine = fgetl(hruFileID);
+               
+               end
+               
+               yearHruIndex = yearHruIndex + 1;
+               currHruYear = currHruYear + 1;
+            end
+
+            fprintf('Reach HRU Time:')
+            SWAT_data = toc
+
+            fclose(hruFileID)
+            cd ..
+        end
+
+
